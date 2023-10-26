@@ -5,6 +5,7 @@ import { Form } from "../Components/Form/form";
 export const ThreadPage = () => {
     const [thread, setThread] = useState([]);
     const [addThread, setAddThread] = useState('');
+    // eslint-disable-next-line
     const [promptDirectory, setPromptDirectory] = useState('');
 
     useEffect(() => {
