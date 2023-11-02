@@ -1,13 +1,16 @@
+# syntax=docker/dockerfile:1
 FROM python:3
+
+COPY ./requirements.txt /app/requirements.txt
 
 WORKDIR /app
 
-COPY . /app
-
 RUN pip install -r requirements.txt
 
-RUN pip install psycopg2-binary
+COPY . /app
 
 COPY . .
 
-CMD ["python", "thread.py"]
+ENTRYPOINT [ "python" ]
+
+CMD [ "thread.py" ]

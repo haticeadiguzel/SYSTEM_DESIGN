@@ -16,6 +16,7 @@ redis_port = 6379
 redis_db = 0
 redis_client = redis.StrictRedis(host=redis_host, port=redis_port, db=redis_db)
 
+
 class Thread(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     command = db.Column(db.Text, nullable=False)
@@ -39,13 +40,16 @@ def index():
 
 @app.route("/get_os", methods=["GET"])
 def get_os():
-    operating_system = platform.system()
-    while True:
+    try:
+        operating_system = platform.system()
         user_hatice = os.getlogin()
         current_directory = os.getcwd()
         prompt_directory = f"{user_hatice}@{operating_system}:{current_directory}$ "
 
         return jsonify({"prompt_directory": prompt_directory})
+    except:
+        prompt_directory = ">>>"
+        return prompt_directory
 
 
 @app.route("/thread/create", methods=["POST"])
@@ -100,4 +104,5 @@ def create():
 
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    port = int(os.environ.get("PORT", 5000))
+    app.run(debug=True, host='0.0.0.0', port=port)

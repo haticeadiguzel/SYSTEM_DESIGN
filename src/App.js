@@ -1,5 +1,5 @@
-import { ThreadPage } from './Pages/ThreadPage';
-import './App.css';
+import { ThreadPage } from "./Pages/ThreadPage";
+import "./App.css";
 
 function App() {
   return (
