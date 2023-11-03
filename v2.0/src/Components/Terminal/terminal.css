@@ -1,0 +1,25 @@
+.terminal-container {
+    max-width: 70%;
+    margin: 20px auto 0;
+    padding: 20px;
+    border: 1px solid #ccc;
+    box-shadow: 0 0 5px rgba(0, 0, 0, 0.2);
+    border-radius: 5px;
+}
+
+.terminal-output ul {
+    list-style-type: none;
+    padding: 0;
+}
+
+.terminal-output li {
+    margin-bottom: 5px;
+}
+
+.terminal-output {
+    margin-top: 0;
+    text-align: left;
+    max-height: 650px;
+    min-height: 650px;
+    overflow-y: auto;
+}
