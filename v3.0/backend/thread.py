@@ -30,6 +30,21 @@ def thread_serializer(thread):
 @app.route("/thread", methods=["GET"])
 def index():
     return jsonify([*map(thread_serializer, Thread.query.all())])
+    
+@app.route("/get_os", methods=["GET"])
+def get_os():
+    try:
+        operating_system = platform.system()
+        current_directory = os.getcwd()
+        try:
+            client = os.getlogin()
+        except:
+            client = request.environ.get("HTTP_X_REAL_IP", request.remote_addr)
+        prompt_directory = f"{client}@{operating_system}:{current_directory}$ "
+        return jsonify({"prompt_directory": prompt_directory})
+    except:
+        prompt_directory = ">>>"
+        return prompt_directory
 
 @app.route("/thread/create", methods=["POST"])
 def create():
@@ -80,21 +95,6 @@ def create():
 
     except Exception as e:
         return jsonify({"status": "error", "message": str(e)})
-
-@app.route("/get_os", methods=["GET"])
-def get_os():
-    try:
-        operating_system = platform.system()
-        current_directory = os.getcwd()
-        try:
-            client = os.getlogin()
-        except:
-            client = request.environ.get("HTTP_X_REAL_IP", request.remote_addr)
-        prompt_directory = f"{client}@{operating_system}:{current_directory}$ "
-        return jsonify({"prompt_directory": prompt_directory})
-    except:
-        prompt_directory = ">>>"
-        return prompt_directory
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
