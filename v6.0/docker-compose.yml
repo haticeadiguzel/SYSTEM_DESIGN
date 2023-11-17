@@ -1,0 +1,111 @@
+version: "3"
+services:
+  api:
+    build:
+      context: ./api
+    container_name: api_thread_container
+    ports:
+      - "5000:5000"
+    environment:
+      - FLASK_APP=api.py
+      - FLASK_ENV=development
+    volumes:
+      - ./api:/app
+    networks:
+      - mynetwork
+    depends_on:
+      - db
+      - redis
+    restart: always
+    
+  worker:
+    build:
+      context: ./worker
+    container_name: worker_thread_container
+    ports:
+      - "5001:5001"
+    environment:
+      - FLASK_APP=worker.py
+      - FLASK_ENV=development
+    volumes:
+      - ./worker:/app
+    networks:
+      - mynetwork
+    depends_on:
+      - db
+      - redis
+      - api
+    restart: always
+    
+  frontend:
+    build:
+      context: ./frontend
+    container_name: frontend_thread_container
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./frontend:/usr/src/app
+    networks:
+      - mynetwork
+    restart: always
+
+  db:
+    image: postgres
+    container_name: db_thread_container
+    environment:
+      POSTGRES_DB: system
+      POSTGRES_USER: hatice
+      POSTGRES_PASSWORD: ataturk
+    ports:
+      - "5432:5432"
+    networks:
+      - mynetwork
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    restart: always
+
+  redis:
+    image: redis
+    container_name: redis_thread_container
+    ports:
+      - "6379:6379"
+    networks:
+      - mynetwork
+    volumes:
+      - redis_data:/var/lib/redis/data
+    restart: always
+  
+  redis_insight:
+    image: redislabs/redisinsight
+    container_name: redis_insight_thread_container
+    ports:
+      - "8001:8001"
+    networks:
+      - mynetwork
+    volumes:
+      - redis_insight_data:/db
+    restart: always
+
+  pgadmin:
+    image: dpage/pgadmin4
+    container_name: pgadmin_thread_container
+    environment:
+      PGADMIN_DEFAULT_EMAIL: adiguzell.hatice@gmail.com
+      PGADMIN_DEFAULT_PASSWORD: ataturk
+    ports:
+      - "5050:80"
+    networks:
+      - mynetwork
+    volumes:
+      - pgadmin_data:/var/lib/pgadmin
+    restart: always
+
+networks:
+  mynetwork:
+    driver: bridge
+
+volumes:
+  postgres_data: {}
+  redis_data: {}
+  redis_insight_data: {}
+  pgadmin_data: {}
