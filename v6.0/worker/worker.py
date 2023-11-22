@@ -1,6 +1,6 @@
-from flask import jsonify, request, Flask
-from rq import Worker, Queue, Connection
 from flask_sqlalchemy import SQLAlchemy
+from rq import Worker, Connection
+from flask import Flask
 import subprocess
 import redis
 
