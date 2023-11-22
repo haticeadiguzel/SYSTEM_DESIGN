@@ -1,22 +1,23 @@
 from flask import request, jsonify, json, Flask
 from flask_sqlalchemy import SQLAlchemy
 from rq import Queue
-import subprocess
 import platform
 import redis
 import os
-
-redis_host = "redis_thread_container"
-redis_port = 6379
-redis_db = 0
-conn = redis.StrictRedis(host=redis_host, port=redis_port, db=redis_db)
-queue = Queue(connection=conn)
 
 app = Flask(__name__)
 app.config[
     "SQLALCHEMY_DATABASE_URI"
 ] = "postgresql://hatice:ataturk@db_thread_container:5432/system"
+
+redis_host = "redis_thread_container"
+redis_port = 6379
+redis_db = 0
+
 db = SQLAlchemy(app)
+conn = redis.Redis(host=redis_host, port=redis_port, db=redis_db)
+queue = Queue(connection=conn)
+
 
 class Thread(db.Model):
     __tablename__ = "thread"
@@ -29,83 +30,63 @@ with app.app_context():
     db.create_all()
     db.session.commit()
 
+
 def thread_serializer(thread):
     return {"id": thread.id, "command": thread.command, "output": thread.output}
 
 
 @app.route("/thread", methods=["GET"])
 def index():
-    return jsonify([*map(thread_serializer, Thread.query.all())])
+    threads = Thread.query.all()
+    max_clear_id = None
+    filtered_threads = []
+
+    for thread in threads:
+        if thread.command == "clear":
+            if max_clear_id is None or thread.id > max_clear_id:
+                max_clear_id = thread.id
+
+    if max_clear_id is not None:
+        filtered_threads = Thread.query.filter(Thread.id > max_clear_id).all()
+    else:
+        filtered_threads = Thread.query.all()
+
+    print(filtered_threads)
+
+    return jsonify([thread_serializer(thread) for thread in filtered_threads])
 
 
 @app.route("/get_os", methods=["GET"])
 def get_os():
     try:
         operating_system = platform.system()
-        current_directory = os.getcwd()
         try:
-            client = os.getlogin() #local
+            client = os.getlogin()  # local environment
         except:
-            client = request.environ.get("HTTP_X_REAL_IP", request.remote_addr) #docker
+            client = request.environ.get(
+                "HTTP_X_REAL_IP", request.remote_addr
+            )  # docker environment
 
-        prompt_directory = f"{client}@{operating_system}:{current_directory}$ "
+        prompt_directory = f"{client}@{operating_system}$ "
         return jsonify({"prompt_directory": prompt_directory})
-    except:
+    except Exception as e:
+        print(f"Error in get_os: {e}")
         prompt_directory = ">>>"
-        return prompt_directory
+        return jsonify({"prompt_directory": prompt_directory})
 
 
 @app.route("/thread/create", methods=["POST"])
 def create():
-    print(f"Create")
-    request_data = json.loads(request.data)
-    command = request_data["command"]
+    try:
+        request_data = json.loads(request.data)
+        command = request_data["command"]
 
-    process = subprocess.Popen(
-            ["ls"], stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True
-        )
-    stdout, stderr = process.communicate()
-    output = stdout.decode("utf-8")
-    error = stderr.decode("utf-8")
-    
-    if command == "clear":
-        Thread.query.delete()
-        db.session.commit()
-        return jsonify({"status": "success", "message": "threads deleted successfully"})
+        queue.enqueue("worker.run_command", command)
+        return jsonify({"status": "success"})
 
-    if command.startswith("cd"):
-        if len(command) == 2:
-            os.chdir(os.path.expanduser("/"))
-        else:
-            new_directory = command[3:]
-            try:
-                os.chdir(new_directory)
-            except FileNotFoundError:
-                return jsonify(
-                    {
-                        "status": "error",
-                        "message": f"Directory not found: {new_directory}",
-                    }
-             )
-            
-    if output:
-        thread = Thread(command=command, output=output)
-        conn.set(output, output)
-    else:
-        thread = Thread(command=command, output=error)
-        conn.set(output, error)
-
-    with app.app_context():
-        db.session.add(thread)
-        db.session.commit()
-        value1 = conn.get(command)
-        print(f"Redis Command: {value1}")
-        value2 = conn.get(output)
-        print(f"Redis Output: {value2}")
-
-    job = queue.enqueue("worker.run_command", command)
-
-    return jsonify({"status": "success", "output": output, "error": error})
+    except Exception as e:
+        print(f"Error in create: {e}")
+        return jsonify({"status": "error", "message": str(e)})
 
 
 if __name__ == "__main__":

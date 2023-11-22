@@ -5,8 +5,6 @@ import { Form } from "../Components/Form/form";
 export const ThreadPage = () => {
   const [thread, setThread] = useState([]);
   const [addThread, setAddThread] = useState("");
-  // eslint-disable-next-line
-  const [promptDirectory, setPromptDirectory] = useState("");
 
   useEffect(() => {
     fetch("/thread")
@@ -34,9 +32,8 @@ export const ThreadPage = () => {
     })
       .then((response) => response.json())
       .then((responseData) => {
-        setAddThread("");
         getLatestThreads();
-        getLatestPromptDirectory();
+        setAddThread("");
       });
   };
 
@@ -47,17 +44,9 @@ export const ThreadPage = () => {
           return response.json();
         }
       })
-      .then((data) => setThread(data));
-  };
-
-  const getLatestPromptDirectory = () => {
-    fetch("/get_os")
-      .then((response) => {
-        if (response.ok) {
-          return response.json();
-        }
-      })
-      .then((data) => setPromptDirectory(data.prompt_directory));
+      .then((data) => {
+        setThread(data);
+      });
   };
 
   return (
