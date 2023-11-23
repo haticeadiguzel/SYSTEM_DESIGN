@@ -24,10 +24,10 @@ class Thread(db.Model):
     output = db.Column(db.Text, nullable=False)
 
 
-def run_command(command):
+def run_command(command, working_directory = None):
     try:
         process = subprocess.Popen(
-            command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True
+            command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True, cwd=working_directory
         )
         stdout, stderr = process.communicate()
         output = stdout.decode("utf-8") if stdout else stderr.decode("utf-8")

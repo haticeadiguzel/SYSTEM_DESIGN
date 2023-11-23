@@ -51,8 +51,6 @@ def index():
     else:
         filtered_threads = Thread.query.all()
 
-    print(filtered_threads)
-
     return jsonify([thread_serializer(thread) for thread in filtered_threads])
 
 
@@ -81,7 +79,13 @@ def create():
         request_data = json.loads(request.data)
         command = request_data["command"]
 
-        queue.enqueue("worker.run_command", command)
+        if command == "cd":
+            command = "ls"
+            working_directory = "/"
+        else:
+            working_directory = "/app"
+
+        queue.enqueue("worker.run_command", command, working_directory)
         return jsonify({"status": "success"})
 
     except Exception as e:
