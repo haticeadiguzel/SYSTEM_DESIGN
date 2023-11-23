@@ -3,6 +3,7 @@ from rq import Worker, Connection
 from flask import Flask
 import subprocess
 import redis
+import os
 
 app = Flask(__name__)
 app.config[
@@ -22,20 +23,41 @@ class Thread(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     command = db.Column(db.Text, nullable=False)
     output = db.Column(db.Text, nullable=False)
+    directory = db.Column(db.Text, nullable=False)
 
 
-def run_command(command, working_directory = None):
+def run_command(command):
     try:
+        with app.app_context():
+            thread_directory = (
+                Thread.query.filter_by(command=command)
+                .order_by(Thread.id.desc())
+                .first()
+            )
+            working_directory = thread_directory.directory
+            print("denemeeeeeeeeeeeee: ", working_directory)
+
+        os.chdir(working_directory)
+
         process = subprocess.Popen(
-            command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True, cwd=working_directory
+            command,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            shell=True,
+            cwd=working_directory,
         )
         stdout, stderr = process.communicate()
         output = stdout.decode("utf-8") if stdout else stderr.decode("utf-8")
 
         with app.app_context():
-            thread = Thread(command=command, output=output)
-            db.session.add(thread)
-            db.session.commit()
+            thread = (
+                Thread.query.filter_by(command=command, directory=working_directory)
+                .order_by(Thread.id.desc())
+                .first()
+            )
+            if thread:
+                thread.output = output
+                db.session.commit()
 
     except Exception as e:
         print(f"Error running command: {str(e)}")
