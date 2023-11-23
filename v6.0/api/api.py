@@ -79,13 +79,23 @@ def create():
         request_data = json.loads(request.data)
         command = request_data["command"]
 
-        if command == "cd":
-            command = "ls"
-            working_directory = "/"
+        if command.startswith("cd"):
+            if len(command) == 2:
+                command = "ls"
+                working_directory = "/"
+            else:
+                new_directory = command[3:]
+                command = "ls"
+                working_directory = new_directory
         else:
             working_directory = "/app"
 
-        queue.enqueue("worker.run_command", command, working_directory)
+        job = queue.enqueue("worker.run_command", command, working_directory)
+        job.result
+
+        with app.app_context():
+            db.session.commit()
+
         return jsonify({"status": "success"})
 
     except Exception as e:
