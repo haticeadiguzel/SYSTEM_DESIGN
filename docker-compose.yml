@@ -17,7 +17,7 @@ services:
       - db
       - redis
     restart: always
-    
+
   worker:
     build:
       context: ./worker
@@ -36,7 +36,7 @@ services:
       - redis
       - api
     restart: always
-    
+
   frontend:
     build:
       context: ./frontend
@@ -74,7 +74,7 @@ services:
     volumes:
       - redis_data:/var/lib/redis/data
     restart: always
-  
+
   redis_insight:
     image: redislabs/redisinsight
     container_name: redis_insight_thread_container

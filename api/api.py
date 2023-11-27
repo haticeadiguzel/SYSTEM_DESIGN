@@ -21,12 +21,13 @@ queue = Queue(connection=conn)
 
 migrate = Migrate(app, db)
 
+
 class Thread(db.Model):
     __tablename__ = "thread"
     id = db.Column(db.Integer, primary_key=True)
-    command = db.Column(db.Text, nullable=True)
+    command = db.Column(db.Text, nullable=False)
     output = db.Column(db.Text, nullable=True)
-    directory = db.Column(db.Text, nullable=True)
+    directory = db.Column(db.Text, nullable=False)
 
 
 with app.app_context():
@@ -35,7 +36,12 @@ with app.app_context():
 
 
 def thread_serializer(thread):
-    return {"id": thread.id, "command": thread.command, "output": thread.output, "directory": thread.directory}
+    return {
+        "id": thread.id,
+        "command": thread.command,
+        "output": thread.output,
+        "directory": thread.directory,
+    }
 
 
 @app.route("/thread", methods=["GET"])
@@ -81,23 +87,23 @@ def create():
     try:
         request_data = json.loads(request.data)
         command = request_data["command"]
-        
-        if command.startswith("cd"):
-            if len(command) == 2:
-                working_directory = "/"
-            else:
-                new_directory = command[3:]
-                working_directory = new_directory
-        else:
-            with app.app_context():
-                thread_directory = (
-                    Thread.query.filter_by(command=command)
-                    .order_by(Thread.id.desc())
-                    .first()
-                )
-                working_directory = thread_directory.directory
 
-        # working_directory = "/app"
+        # if command.startswith("cd"):
+        #     if len(command) == 2:
+        #         working_directory = "/"
+        #     else:
+        #         new_directory = command[3:]
+        #         working_directory = new_directory
+        # else:
+        #     with app.app_context():
+        #         thread_directory = (
+        #             Thread.query.filter_by(command=command)
+        #             .order_by(Thread.id.desc())
+        #             .first()
+        #         )
+        #         working_directory = thread_directory.directory
+
+        working_directory = "/app"
 
         with app.app_context():
             new_thread = Thread(command=command, output="", directory=working_directory)
