@@ -67,13 +67,7 @@ def index():
 def get_os():
     try:
         operating_system = platform.system()
-        try:
-            client = os.getlogin()  # local environment
-        except:
-            client = request.environ.get(
-                "HTTP_X_REAL_IP", request.remote_addr
-            )  # docker environment
-
+        client = request.environ.get("HTTP_X_REAL_IP", request.remote_addr)
         prompt_directory = f"{client}@{operating_system}$ "
         return jsonify({"prompt_directory": prompt_directory})
     except Exception as e:
