@@ -23,20 +23,15 @@ class Thread(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     command = db.Column(db.Text, nullable=False)
     output = db.Column(db.Text, nullable=True)
-    directory = db.Column(db.Text, nullable=False)
+    directory = db.Column(db.Text, nullable=True)
 
 
 def run_command(command):
     try:
-        # with app.app_context():
-        #     thread_directory = (
-        #         Thread.query.filter_by(command=command)
-        #         .order_by(Thread.id.desc())
-        #         .first()
-        #     )
-        #     working_directory = thread_directory.directory
-        #     print("denemeeeeeeeeeeeee: ", working_directory)
-        working_directory = "/app"
+        with app.app_context():
+            thread_directory = Thread.query.order_by(Thread.id.desc()).first()
+            working_directory = thread_directory.directory
+            print("working directory: ", working_directory)
 
         os.chdir(working_directory)
 
