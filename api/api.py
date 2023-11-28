@@ -27,7 +27,7 @@ class Thread(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     command = db.Column(db.Text, nullable=False)
     output = db.Column(db.Text, nullable=True)
-    directory = db.Column(db.Text, nullable=False)
+    directory = db.Column(db.Text, nullable=True)
 
 
 with app.app_context():
@@ -88,24 +88,20 @@ def create():
         request_data = json.loads(request.data)
         command = request_data["command"]
 
-        # if command.startswith("cd"):
-        #     if len(command) == 2:
-        #         working_directory = "/"
-        #     else:
-        #         new_directory = command[3:]
-        #         working_directory = new_directory
-        # else:
-        #     with app.app_context():
-        #         thread_directory = (
-        #             Thread.query.filter_by(command=command)
-        #             .order_by(Thread.id.desc())
-        #             .first()
-        #         )
-        #         working_directory = thread_directory.directory
-
-        working_directory = "/app"
-
         with app.app_context():
+            if command.startswith("cd"):
+                if len(command) == 2:
+                    working_directory = "/"
+                else:
+                    new_directory = command[3:]
+                    working_directory = new_directory
+            else:
+                thread_directory = Thread.query.order_by(Thread.id.desc()).first()
+                working_directory = thread_directory.directory
+
+            if working_directory == None:
+                working_directory = "/"
+
             new_thread = Thread(command=command, output="", directory=working_directory)
             db.session.add(new_thread)
             db.session.commit()
