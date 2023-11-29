@@ -6,6 +6,8 @@ setup(
     packages=find_packages(),
     install_requires=[
         'Flask-SQLAlchemy',
+        'Flask',
+        'redis',
     ],
     python_requires='>=3.6',
 )
