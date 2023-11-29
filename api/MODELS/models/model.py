@@ -14,6 +14,7 @@ redis_db = 0
 db = SQLAlchemy(app)
 conn = redis.Redis(host=redis_host, port=redis_port, db=redis_db)
 
+
 class Thread(db.Model):
     __tablename__ = "thread"
     id = db.Column(db.Integer, primary_key=True)

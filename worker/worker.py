@@ -3,6 +3,7 @@ from rq import Worker, Connection
 import subprocess
 import os
 
+
 def run_command(command):
     try:
         with app.app_context():
