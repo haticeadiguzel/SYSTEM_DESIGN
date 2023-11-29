@@ -21,3 +21,4 @@ class Thread(db.Model):
     command = db.Column(db.Text, nullable=False)
     output = db.Column(db.Text, nullable=True)
     directory = db.Column(db.Text, nullable=True)
+    created_at = db.Column(db.DateTime, server_default=db.func.now())
