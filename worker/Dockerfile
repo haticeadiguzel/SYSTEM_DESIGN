@@ -13,4 +13,6 @@ COPY . /app
 
 COPY . .
 
+RUN pip install /app/MODELS/dist/models-0.0.1.tar.gz
+
 CMD [ "python", "worker.py" ]

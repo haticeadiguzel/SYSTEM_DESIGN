@@ -11,6 +11,8 @@ RUN pip install -r requirements.txt
 
 COPY . /app
 
+RUN pip install /app/MODELS/dist/models-0.0.1.tar.gz
+
 COPY . .
 
 CMD [ "python", "api.py" ]

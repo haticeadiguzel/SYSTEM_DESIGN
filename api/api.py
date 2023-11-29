@@ -1,5 +1,6 @@
 from flask import request, jsonify, json, Flask
 from flask_sqlalchemy import SQLAlchemy
+from models.model import Thread, db
 from flask_migrate import Migrate
 from rq import Queue
 import platform
@@ -15,20 +16,12 @@ redis_host = "redis_thread_container"
 redis_port = 6379
 redis_db = 0
 
-db = SQLAlchemy(app)
 conn = redis.Redis(host=redis_host, port=redis_port, db=redis_db)
 queue = Queue(connection=conn)
 
 migrate = Migrate(app, db)
 
-
-class Thread(db.Model):
-    __tablename__ = "thread"
-    id = db.Column(db.Integer, primary_key=True)
-    command = db.Column(db.Text, nullable=False)
-    output = db.Column(db.Text, nullable=True)
-    directory = db.Column(db.Text, nullable=True)
-
+db.init_app(app)
 
 with app.app_context():
     db.create_all()
